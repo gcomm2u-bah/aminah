@@ -257,11 +257,23 @@ var API_URL = "";
 // ---------- API layer ----------
 function apiUrl(){ return API_URL || localStorage.getItem("rumah_api") || ""; }
 
+// FIXED: use POST for initial data load (backend expects POST)
 async function apiGet(){
-  var r = await fetch(apiUrl() + "?action=getAll", { method:"GET" });
-  var j = await r.json();
-  if(!j.ok) throw new Error(j.error||"load failed");
-  return j.data;
+  setSync("saving");
+  try {
+    var r = await fetch(apiUrl(), {
+      method:"POST",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body: JSON.stringify({action:"getAll"})
+    });
+    var j = await r.json();
+    if(!j.ok) throw new Error(j.error||"load failed");
+    setSync("ok");
+    return j.data;
+  } catch(e) {
+    setSync("err");
+    throw e;
+  }
 }
 async function apiPost(payload){
   setSync("saving");
